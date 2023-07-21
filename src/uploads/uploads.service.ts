@@ -14,21 +14,21 @@ export default class UploadsService {
   }
 
   //로컬 파일 확인
-  async isLocalFileExist(userData: User) {
-    const avatarUrl: string = userData.avatar;
-    console.log(`파일 제거 대상자 : ${userData.nickname}`);
-    console.log(`지울 파일명 : ${avatarUrl}`);
+  // async isLocalFileExist(userData: User) {
+  //   const avatarUrl: string = userData.avatar;
+  //   console.log(`파일 제거 대상자 : ${userData.nickname}`);
+  //   console.log(`지울 파일명 : ${avatarUrl}`);
 
-    if (avatarUrl.includes('./uploads')) {
-      try {
-        await fs.accessSync(avatarUrl, fs.constants.F_OK);
-        return true;
-      } catch (err) {
-        return false;
-      }
-    }
-    return false;
-  }
+  //   if (avatarUrl.includes('./uploads')) {
+  //     try {
+  //       await fs.accessSync(avatarUrl, fs.constants.F_OK);
+  //       return true;
+  //     } catch (err) {
+  //       return false;
+  //     }
+  //   }
+  //   return false;
+  // }
 
   //파일 삭제
   async deleteFile(fileDir: string) {

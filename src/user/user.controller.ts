@@ -104,28 +104,28 @@ export class UserController {
   // {
   //   "otp": true
   // }
-  @Post('/otp') //otp 설정 요청
-  async updateOtp(@Body('otp') otp: boolean, @Req() req: Request) {
-    const cookie = this.cookieService.extractCookie(req.cookies['session_key']);
-    if (cookie == undefined) throw new NotFoundException('cookie not found');
-    const target = this.userService.getIntraID(cookie);
-    const updateOtp = await this.userService.updateOtp(target, otp);
-    if (updateOtp == false) throw new NotFoundException(`${target} not found.`);
-    return;
-  }
+  // @Post('/otp') //otp 설정 요청
+  // async updateOtp(@Body('otp') otp: boolean, @Req() req: Request) {
+  //   const cookie = this.cookieService.extractCookie(req.cookies['session_key']);
+  //   if (cookie == undefined) throw new NotFoundException('cookie not found');
+  //   const target = this.userService.getIntraID(cookie);
+  //   const updateOtp = await this.userService.updateOtp(target, otp);
+  //   if (updateOtp == false) throw new NotFoundException(`${target} not found.`);
+  //   return;
+  // }
 
   // {
   //   "url": "https://i.imgflip.com/1rpfag.jpg"
   // }
-  @Post('/avatar')
-  async updateAvatarURL(@Body('url') url: string, @Req() req: Request) {
-    const cookie = this.cookieService.extractCookie(req.cookies['session_key']);
-    if (cookie == undefined) throw new NotFoundException('cookie not found');
-    const target = this.userService.getIntraID(cookie);
-    const updateURL = await this.userService.updateURL(target, url);
-    if (updateURL == false) throw new NotFoundException(`${target} not found.`);
-    return;
-  }
+  // @Post('/avatar')
+  // async updateAvatarURL(@Body('url') url: string, @Req() req: Request) {
+  //   const cookie = this.cookieService.extractCookie(req.cookies['session_key']);
+  //   if (cookie == undefined) throw new NotFoundException('cookie not found');
+  //   const target = this.userService.getIntraID(cookie);
+  //   const updateURL = await this.userService.updateURL(target, url);
+  //   if (updateURL == false) throw new NotFoundException(`${target} not found.`);
+  //   return;
+  // }
 
   // {
   //   "intraID": "hena",
@@ -141,4 +141,25 @@ export class UserController {
       throw new NotFoundException(`${intraID} not found.`);
     return;
   }
+
+  // test code 🚀
+  @Post()
+  async createUser(@Body() body, @Req() req: Request) {
+    const { intraId, email } = body;
+
+    if(!intraId || !email)
+      return 'error!';
+
+    const user = await this.userService.createUser(intraId, email);
+    return user;
+  }
 }
+
+/*
+{
+    "name":"이솝",
+    "price":"5000",
+    "image": "https://perfumegraphy.com/web/product/big/202211/2d5050ab8fa1b5ab5c9de9206a47d698.jpg",
+    "description": "심건우씨한테 정말 잘어울리는 향수 😎"
+}
+*/

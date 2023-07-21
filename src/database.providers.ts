@@ -1,11 +1,8 @@
 import { DataSource } from 'typeorm';
-import { Channel } from './typeorm/entities/Channel';
-import { Channelinfo } from './typeorm/entities/Channelinfo';
-import { Friendlist } from './typeorm/entities/Friendlist';
-import { Matchhistory } from './typeorm/entities/Matchhistory';
 import { User } from './typeorm/entities/User';
-import { Userblacklist } from './typeorm/entities/Userblacklist';
-import { channelBlacklist } from './typeorm/entities/ChannelBlacklist';
+import { Product } from './typeorm/entities/Product';
+import { Payment } from './typeorm/entities/Payment';
+import { PaymentDetail } from './typeorm/entities/PaymentDetail';
 
 export const databaseProviders = [
   {
@@ -13,22 +10,25 @@ export const databaseProviders = [
     useFactory: async () => {
       const dataSource = new DataSource({
         name: 'default',
-        type: 'postgres',
-        host: 'postgres',
-        port: 5432,
-        username: 'postgres',
+        type: 'mysql',
+        host: 'localhost',
+        port: 3306,
+        username: 'root',
         password: '1234',
-        database: 'ft_db',
+        database: 'perfume_today',
         synchronize: true,
         //entities: [__dirname + '/**/*.entity{.ts,.js}', User],
         entities: [
           User,
-          Channel,
-          Channelinfo,
-          Friendlist,
-          Matchhistory,
-          Userblacklist,
-          channelBlacklist,
+          Product,
+          Payment,
+          PaymentDetail,
+          // Channel,
+          // Channelinfo,
+          // Friendlist,
+          // Matchhistory,
+          // Userblacklist,
+          // channelBlacklist,
         ],
       });
       return dataSource.initialize();

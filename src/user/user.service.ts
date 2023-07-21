@@ -81,17 +81,11 @@ export class UserService {
   async createUser(
     intraID: string,
     email: string,
-    avatarURL: string,
   ): Promise<User> {
     const user = this.userRepository.create();
     user.intraid = intraID;
-    user.avatar = avatarURL;
     user.nickname = null;
-    user.isotp = false;
     user.email = email;
-    user.wincount = 0;
-    user.losecount = 0;
-    user.rating = 1200;
     const temp = await this.userRepository.save(user);
     user.nickname = `anon_${temp.id}`;
     return this.userRepository.save(user);
@@ -133,13 +127,13 @@ export class UserService {
   }
 
   //Otp 설정 업데이트
-  async updateOtp(intraID: string, otp: boolean): Promise<boolean> {
-    const userData = await this.findUser(intraID);
-    if (userData == null || intraID == undefined) return false;
-    userData.isotp = otp;
-    await this.userRepository.save(userData);
-    return true;
-  }
+  // async updateOtp(intraID: string, otp: boolean): Promise<boolean> {
+  //   const userData = await this.findUser(intraID);
+  //   if (userData == null || intraID == undefined) return false;
+  //   userData.isotp = otp;
+  //   await this.userRepository.save(userData);
+  //   return true;
+  // }
 
   //닉네임 설정 업데이트
   async updateNickname(intraID: string, nickname: string): Promise<boolean> {
@@ -152,11 +146,11 @@ export class UserService {
   }
 
   //Avatar URL 업데이트
-  async updateURL(intraID: string, url: string): Promise<boolean> {
-    const userData = await this.findUser(intraID);
-    if (userData == null || intraID == undefined) return false;
-    userData.avatar = url;
-    await this.userRepository.save(userData);
-    return true;
-  }
+  // async updateURL(intraID: string, url: string): Promise<boolean> {
+  //   const userData = await this.findUser(intraID);
+  //   if (userData == null || intraID == undefined) return false;
+  //   userData.avatar = url;
+  //   await this.userRepository.save(userData);
+  //   return true;
+  // }
 }
