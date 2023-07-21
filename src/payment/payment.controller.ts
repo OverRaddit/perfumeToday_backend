@@ -66,8 +66,7 @@ export class PaymentController {
     };
 
 		// 3. 결제승인 API 요청 날리기
-		const apiKey = 'test_sk_ODnyRpQWGrN7RLEPG2B8Kwv1M9EN:';
-		const base64Encoded = Buffer.from(apiKey).toString('base64');
+		const base64Encoded = Buffer.from(process.env.secretKey).toString('base64');
 		console.log(base64Encoded);
 		const headers = {
       'Authorization': `Basic ${base64Encoded}`,

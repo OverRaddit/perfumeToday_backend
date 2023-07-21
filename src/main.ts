@@ -7,8 +7,10 @@ import * as serveStatic from 'serve-static';
 import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
+import { config } from 'dotenv';
 
 async function bootstrap() {
+  config();
   // 2개가 무슨 차이인지 잘 모르겠다.
   //const app = await NestFactory.create(AppModule);
   const app = await NestFactory.create<NestExpressApplication>(
