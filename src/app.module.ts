@@ -16,7 +16,7 @@ import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
-    // AuthModule,
+    AuthModule,
     UserModule,
     DatabaseModule,
     // CookieModule,

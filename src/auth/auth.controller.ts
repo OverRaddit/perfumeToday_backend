@@ -13,6 +13,7 @@ import { OtpService } from 'src/otp/otp.service';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
 import { FTAuthGuard } from './ft_auth_guard';
+import axios from 'axios';
 
 //@UseGuards(FTAuthGuard)
 @Controller('/auth')
@@ -114,6 +115,34 @@ export class AuthController {
     )}&response_type=code`;
     res.redirect(authorizationURL);
   }
+
+  @Get('kakao')
+  async kakao(@Req() req: any, @Res() res: any) {
+    const kakaoToken = "some_token";
+
+    // Request user information from Kakao using the accessToken
+    const me = await axios.get('https://kapi.kakao.com/v2/user/me', {
+      headers: {
+        Authorization: `Bearer ${kakaoToken}`,
+        'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
+      },
+    });
+
+    // me라는 카카오회원의 정보가 db에 등록되어 있는지에 따라 회원가입, 로그인 로직이 갈린다.
+
+    // custom token 발급
+    const jwtToken = await this.authService.generateToken({ foo:'bar', admin:'gshim' });
+    const isMobileClient = req.headers['user-agent'].includes('Mobile'); // or any better method to determine client type
+    if (isMobileClient) {
+      res.json({ jwtToken });
+      console.log('kakao login success ✅');
+    } else {
+      res.cookie('jwtToken', JSON.stringify({ jwtToken }), { httpOnly: true });
+      res.send('kakao login success ✅');
+    }
+  }
+
+
 
   // Debug End Point
   @UseGuards(FTAuthGuard)

@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { JwtAuthService } from '../jwt/jwt.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly jwtAuthService: JwtAuthService
+  ) {}
 
   async getIntraData(accessToken: string): Promise<any> {
     const config = {
@@ -38,5 +42,10 @@ export class AuthService {
       console.error('Error getting access token:', error);
       throw error;
     }
+  }
+
+  async generateToken(payload: any): Promise<string> {
+    const token = await this.jwtAuthService.generateToken(payload);
+    return token;
   }
 }
