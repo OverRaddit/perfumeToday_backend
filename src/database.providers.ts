@@ -17,6 +17,7 @@ export const databaseProviders = [
         password: '1234',
         database: 'perfume_today',
         synchronize: true,
+        logging: true,
         //entities: [__dirname + '/**/*.entity{.ts,.js}', User],
         entities: [
           User,

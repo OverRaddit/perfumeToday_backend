@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Payment } from 'src/typeorm/entities/Payment';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreatePaymentDto, TossPaymentDto } from './payment.dto';
 import { PaymentDetail } from 'src/typeorm/entities/PaymentDetail';
 
@@ -11,6 +11,7 @@ export class PaymentService {
 	constructor(
 		@Inject('PAYMENT_REPOSITORY') private paymentRepository: Repository<Payment>,
 		@Inject('PAYMENTDETAIL_REPOSITORY') private paymentDetailRepository: Repository<PaymentDetail>,
+		@Inject('DATA_SOURCE') private readonly dataSource: DataSource,
 	) {}
 
 	setCurrentPayment(payment: TossPaymentDto) {
@@ -50,29 +51,54 @@ export class PaymentService {
 	// 	]
 	// }
 	async createPayment(createPaymentDto: CreatePaymentDto): Promise<Payment> {
-		const payment = this.paymentRepository.create({
-			user: { id: createPaymentDto.userId },
-			totalAmount: createPaymentDto.totalAmount,
-		});
-		const savedPayment = await this.paymentRepository.save(payment);
+		const queryRunner = this.dataSource.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction();
 
-		console.log('createPaymentDto:', createPaymentDto);
-
-		for(let detail of createPaymentDto.paymentDetails) {
-			// 어떻게 payment 객체가 아닌 id를 통해 create하는 건지 궁금함.
-			const paymentDetail = this.paymentDetailRepository.create({
-				payment: { id: savedPayment.id },
-				product: { id: detail.productId },
-				quantity: detail.quantity,
+		try {
+			// 1.
+			const payment = this.paymentRepository.create({
+				user: { id: createPaymentDto.userId },
+				totalAmount: createPaymentDto.totalAmount,
 			});
+			//const savedPayment = await this.paymentRepository.save(payment);
+			const savedPayment = await queryRunner.manager.save(payment);
 
-			// 이렇게 For문 안에서 비동기 처리를 매번 하는게 효율적으로 보이지 않음.
-			// Promise.all을 이용할수 있는지 궁금함 -> 트랜잭션 처리가 복잡해진다고 함.
-			// 기왕 쓴다면 Promise.allSettled를 사용하라고 함.
-			await this.paymentDetailRepository.save(paymentDetail);
+			console.log('createPaymentDto:', createPaymentDto);
+
+			// 2.
+			for(let detail of createPaymentDto.paymentDetails) {
+				// 어떻게 payment 객체가 아닌 id를 통해 create하는 건지 궁금함.
+				const paymentDetail = this.paymentDetailRepository.create({
+					payment: { id: savedPayment.id },
+					product: { id: detail.productId },
+					quantity: detail.quantity,
+				});
+
+				// 이렇게 For문 안에서 비동기 처리를 매번 하는게 효율적으로 보이지 않음.
+				// Promise.all을 이용할수 있는지 궁금함 -> 트랜잭션 처리가 복잡해진다고 함.
+				// 기왕 쓴다면 Promise.allSettled를 사용하라고 함.
+				//await this.paymentDetailRepository.save(paymentDetail);
+				await queryRunner.manager.save(paymentDetail);
+			}
+			await queryRunner.commitTransaction();
+
+			//throw Error('트랜잭션 디버깅을 위한 임의 에러발생');
+
+			const ret = await queryRunner.manager.findOne(Payment, {
+				where: { id: savedPayment.id },
+				// 수동으로 가져오는게 불편하면 나중에 entity에서 묶을 수 있다.
+				relations: {
+					paymentDetails: true,
+				}
+			})
+			return ret;
+		} catch (error) {
+			console.error(error);
+			await queryRunner.rollbackTransaction();
+		} finally {
+			await queryRunner.release();
 		}
-
-		return savedPayment;
 	}
 
 	async getPaymentById(
@@ -92,7 +118,31 @@ export class PaymentService {
 		return this.paymentRepository.delete(PaymentId);
 	}
 
-	createPaymentNum() {
+	formatDateToNumber(date: Date): string {
+		const year = date.getFullYear().toString().slice(-2).padStart(2, '0');
+		const month = (date.getMonth() + 1).toString().padStart(2, '0');
+		const day = date.getDate().toString().padStart(2, '0');
 
+		return `${year}${month}${day}`;
 	}
+
+	extractLatterPart(inputString: string): number | null {
+		const currentDate = new Date();
+		const targetString = this.formatDateToNumber(currentDate);
+
+		// Define the regular expression pattern to match the generated targetString at the beginning of the inputString
+		const pattern = new RegExp(`^${targetString}(\\d+)`);
+
+		// Use the regular expression to match and extract the latter part of the inputString
+		const matchResult = inputString.match(pattern);
+
+		// Check if there was a match and return the latter part if it exists
+		if (matchResult && matchResult[1]) {
+			return parseInt(matchResult[1], 10);
+		}
+
+		// If no match was found, return null or an appropriate value as per your requirements
+		return null;
+	}
+
 }

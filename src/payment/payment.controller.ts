@@ -45,15 +45,15 @@ export class PaymentController {
 	@Get('success')
 	@Render('success')
 	async successPage(@Query() query) {
-		const { paymentType, orderId, orderPk, paymentKey, amount } = query;
+		const { paymentType, orderId, paymentKey, amount } = query;
 
 		// 결제처리 로직 =================================
 
 		// 1. 임시저장했던 데이터와 비교 검증(클라이언트측 데이터 조작 방지)
+		const orderPk = this.paymentService.extractLatterPart(orderId);
 		const temp = await this.paymentService.getPaymentById(orderPk);
-
-		// console.log('temp:', temp);
-		// console.log('query:', query);
+		console.log('query:', query); // 임시데이터는 저장되지 않았을 것으로 예상됨.
+		console.log('temp:', temp); // 임시데이터는 저장되지 않았을 것으로 예상됨.
 
 		// if (temp.id !== orderId || temp.totalAmount !== amount)
     //   return 'fail';
@@ -66,7 +66,7 @@ export class PaymentController {
     };
 
 		// 3. 결제승인 API 요청 날리기
-		const base64Encoded = Buffer.from(process.env.secretKey).toString('base64');
+		const base64Encoded = Buffer.from(process.env.secretKey + ':').toString('base64');
 		console.log(base64Encoded);
 		const headers = {
       'Authorization': `Basic ${base64Encoded}`,
