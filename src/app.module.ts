@@ -13,9 +13,12 @@ import UploadsService from './uploads/uploads.service';
 import { UserService } from './user/user.service';
 import { ProductModule } from './product/product.module';
 import { PaymentModule } from './payment/payment.module';
+import { JwtModule } from '@nestjs/jwt';
+import { JwtStrategy } from './jwt/jwt.strategy';
 
 @Module({
   imports: [
+    JwtModule,
     AuthModule,
     UserModule,
     DatabaseModule,

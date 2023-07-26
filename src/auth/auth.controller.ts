@@ -1,7 +1,7 @@
 import {
   Controller,
   Get,
-  NotAcceptableException,
+  Post,
   Req,
   Res,
   UseGuards,
@@ -12,8 +12,8 @@ import { MailService } from 'src/mail/mail.service';
 import { OtpService } from 'src/otp/otp.service';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
-import { FTAuthGuard } from './ft_auth_guard';
-import axios from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
+import { JwtAuthGuard } from 'src/jwt/jwt_auth_guard';
 
 //@UseGuards(FTAuthGuard)
 @Controller('/auth')
@@ -142,16 +142,112 @@ export class AuthController {
     }
   }
 
+  @Post('naver')
+  async customTokenByNaver(@Req() req: any, @Res() res: any) {
+    const { naver_access_token } = req.body;
+    console.log('naver_access_token:[', naver_access_token, ']');
 
+    if (!naver_access_token) {
+      console.log('토큰이 없쪙..🥹');
+      res.send('토큰이 없쪙..🥹');
+      return;
+    }
 
-  // Debug End Point
-  @UseGuards(FTAuthGuard)
-  @Get('/gshim')
-  gshimFunction() {
-    return 'gshim';
-  }
-  @Get('/alee')
-  aleeFunction() {
-    return 'alee';
+    const apiURL = 'https://openapi.naver.com/v1/nid/me';
+
+    try {
+      const response: AxiosResponse = await axios.get(apiURL, {
+        headers: {
+          'Authorization': `Bearer ${naver_access_token}`,
+        },
+      });
+
+      // custom token 발급
+      const jwtToken = await this.authService.generateToken({
+        id: response.data.response.id,
+        email: response.data.response.email,
+      });
+      console.log('esponse.data.response: ', response.data.response);
+      console.log('jwtToken:', jwtToken);
+      console.log('isMobile:', req.headers['user-agent']); // Dart/3.0 (dart:io)
+      const isMobileClient = req.headers['user-agent'].includes('Mobile'); // or any better method to determine client type
+      if (isMobileClient) { // not work 🥹
+        res.json({ jwtToken });
+        console.log('kakao login success ✅✅');
+      } else {
+        //res.cookie('jwtToken', JSON.stringify({ jwtToken }), { httpOnly: true });
+        console.log('jwtToken:', jwtToken);
+        res.json({ jwtToken });
+        //res.send('kakao login success ✅');
+      }
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        console.log(axiosError.response?.data);
+      } else {
+        console.error((error as Error).message);
+      }
+      res.send(error);
+    }
+  };
+
+  @Post('kakao')
+  async customTokenByKakao(@Req() req: any, @Res() res: any) {
+    const { kakao_access_token } = req.body;
+    console.log('kakao_access_token:[', kakao_access_token, ']');
+
+    if (!kakao_access_token) {
+      console.log('토큰이 없쪙..🥹');
+      res.send('토큰이 없쪙..🥹');
+      return;
+    }
+
+    try {
+      // Request user information from Kakao using the accessToken
+      const me = await axios.get('https://kapi.kakao.com/v2/user/me', {
+        headers: {
+          Authorization: `Bearer ${kakao_access_token}`,
+          'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
+        },
+      });
+
+      // custom token 발급
+      const jwtToken = await this.authService.generateToken({
+        id: me.data.response.id,
+        email: me.data.response.email,
+      });
+      console.log('response.data: ', me.data);
+      console.log('jwtToken:', jwtToken);
+
+      //console.log('isMobile:', req.headers['user-agent']); // Dart/3.0 (dart:io)
+      // const isMobileClient = req.headers['user-agent'].includes('Mobile'); // or any better method to determine client type
+      // if (isMobileClient) { // not work 🥹
+      //   res.json({ jwtToken });
+      //   console.log('kakao login success ✅✅');
+      // } else {
+      //   //res.cookie('jwtToken', JSON.stringify({ jwtToken }), { httpOnly: true });
+      //   console.log('jwtToken:', jwtToken);
+      //   res.json({ jwtToken });
+      //   //res.send('kakao login success ✅');
+      // }
+      res.json({ jwtToken });
+      res.send('kakao login success ✅');
+
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        console.log(axiosError.response?.data);
+      } else {
+        console.error((error as Error).message);
+      }
+      res.send(error);
+    }
+  };
+
+  @UseGuards(JwtAuthGuard)
+  @Get('naver_test')
+  todaysFood(@Req() req: any, @Res() res: any) {
+    console.log('req.rawHeaders:',req.rawHeaders);
+    res.send('당신은 로그인에 성공했군요! 🍟');
   }
 }
